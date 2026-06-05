@@ -1,0 +1,42 @@
+这是一个简单的python爬虫，用于爬取豆瓣电影TOP25第一页内容
+
+# 导入需要的库：requests发送网络请求，BeautifulSoup解析网页
+import requests
+from bs4 import BeautifulSoup
+
+# 目标网页：豆瓣电影TOP25第一页
+TARGET_URL = "https://movie.douban.com/top250?start=0&filter="
+# 请求头：模拟浏览器访问（必须加，否则网站会拦截爬虫）
+REQUEST_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+}
+
+# ===================== 执行爬取逻辑 =====================
+try:
+    # 1. 向目标网站发送请求，获取网页源代码
+    response = requests.get(TARGET_URL, headers=REQUEST_HEADERS)
+    response.raise_for_status()  # 如果请求失败（如404/500），直接抛出错误
+
+    # 2. 解析网页内容
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    # 3. 提取电影数据（找到所有电影条目）
+    movie_items = soup.find_all("div", class_="item")
+
+    # 4. 遍历并打印结果
+    print("=" * 50)
+    print("豆瓣电影TOP25 爬取结果")
+    print("=" * 50)
+    for index, item in enumerate(movie_items, 1):
+        # 提取电影名
+        movie_name = item.find("span", class_="title").text
+        # 提取评分
+        movie_score = item.find("span", class_="rating_num").text
+        # 提取上映年份
+        movie_year = item.find("div", class_="bd").p.text.strip().split()[-1][:4]
+
+        print(f"第{index:02d}名 | 电影：{movie_name} | 评分：{movie_score} | 年份：{movie_year}")
+
+# 捕获异常，提示错误原因
+except Exception as error:
+    print(f"爬取失败！错误信息：{error}")
